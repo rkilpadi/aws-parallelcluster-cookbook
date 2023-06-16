@@ -13,6 +13,9 @@ default['conditions']['arm_pl_supported'] = arm_instance?
 default['cluster']['nvidia']['enabled'] = 'no'
 default['cluster']['nvidia']['driver_version'] = '470.199.02'
 
+# Spack
+default['cluster']['spack_root'] = "/home/#{node['cluster']['cluster_user']}/spack"
+
 # DCV
 default['cluster']['dcv']['authenticator']['user'] = "dcvextauth"
 default['cluster']['dcv']['authenticator']['user_id'] = node['cluster']['reserved_base_uid'] + 3

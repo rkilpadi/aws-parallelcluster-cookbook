@@ -169,6 +169,17 @@ suites:
       resource: nvidia_repo:remove
       dependencies:
         - resource:nvidia_repo:add
+  - name: spack
+    run_list:
+      - recipe[aws-parallelcluster-tests::setup]
+      - recipe[aws-parallelcluster-tests::test_resource]
+    verifier:
+      controls:
+        - /tag:install_spack/
+    attributes:
+      resource: spack
+      dependencies:
+        - recipe:aws-parallelcluster-platform::directories
   - name: modules
     run_list:
       - recipe[aws-parallelcluster-tests::setup]
