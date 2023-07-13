@@ -19,5 +19,9 @@ use 'partial/_spack_common.rb'
 def dependencies
   %w(autoconf automake bison byacc cscope ctags diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran git
      indent intltool libtool patch patchutils rcs rpm-build rpm-sign subversion swig system-rpm-config systemtap
-     curl findutils gnupg2 hostname iproute redhat-lsb-core python3 python3-setuptools unzip python-boto3)
+     curl findutils hostname iproute redhat-lsb-core python3 python3-setuptools unzip python-boto3)
+end
+
+def libfabric_path
+  '/opt/amazon/efa/lib64/pkgconfig/libfabric.pc'
 end

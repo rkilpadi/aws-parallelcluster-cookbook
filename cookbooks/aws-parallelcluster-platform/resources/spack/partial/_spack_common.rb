@@ -23,6 +23,10 @@ property :spack_root, String, required: false,
 action :install_spack do
   return if on_docker?
 
+  node.default['cluster']['spack']['user'] = new_resource.spack_user
+  node.default['cluster']['spack']['root'] = new_resource.spack_root
+  node_attributes 'dump node attributes'
+
   package_repos 'update package repos'
 
   install_packages 'install spack dependencies' do
@@ -45,7 +49,57 @@ action :install_spack do
     variables(spack_root: new_resource.spack_root)
   end
 
-  node.default['cluster']['spack_user'] = new_resource.spack_user
-  node.default['cluster']['spack_root'] = new_resource.spack_root
-  node_attributes "dump node attributes"
+  spack = "#{new_resource.spack_root}/bin/spack"
+  spack_configs_dir = "#{new_resource.spack_root}/etc/spack"
+  arch_target = `#{spack} arch -t`.strip
+
+  # Find libfabric version to be used in package configs
+  libfabric_version = nil
+  ::File.open(libfabric_path).each do |line|
+    if line.include?('Version:')
+      libfabric_version = line.split[1].strip
+      break
+    end
+  end
+
+  # Pull architecture dependent package config
+  begin
+    template "#{spack_configs_dir}/packages.yaml" do
+      cookbook 'aws-parallelcluster-platform'
+      source "spack/packages-#{arch_target}.yaml.erb"
+      owner new_resource.spack_user
+      group new_resource.spack_user
+      variables(libfabric_version: libfabric_version)
+    end
+  rescue Chef::Exceptions::FileNotFound
+    Chef::Log.warn "Could not find template for #{arch_target}"
+  end
+
+  template "#{spack_configs_dir}/mirrors.yaml" do
+    cookbook 'aws-parallelcluster-platform'
+    source "spack/mirrors.yaml.erb"
+    owner new_resource.spack_user
+    group new_resource.spack_user
+    variables(arch_target: arch_target)
+  end
+
+  cookbook_file "#{spack_configs_dir}/modules.yaml" do
+    cookbook 'aws-parallelcluster-platform'
+    source 'spack/modules.yaml'
+    owner new_resource.spack_user
+    group new_resource.spack_user
+    mode '0755'
+  end
+
+  bash 'setup Spack' do
+    user new_resource.spack_user
+    environment({ "HOME" => "/home/#{new_resource.spack_user}" })
+    code <<-SPACK
+      source #{new_resource.spack_root}/share/spack/setup-env.sh
+      #{spack} compiler add --scope site
+      #{spack} external find --scope site
+      #{spack} tags build-tools | xargs -I {} #{spack} config --scope site rm packages:{}
+      #{spack} buildcache keys --install --trust
+    SPACK
+  end
 end

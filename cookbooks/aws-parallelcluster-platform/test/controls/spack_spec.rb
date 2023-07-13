@@ -11,19 +11,21 @@
 # OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and
 # limitations under the License.
 
+spack = "#{node['cluster']['spack']['root']}/bin/spack"
+
 control 'tag:install_spack_correctly_installed' do
   only_if { !os_properties.on_docker? }
 
-  describe directory(node['cluster']['spack_root']) do
+  describe directory(node['cluster']['spack']['root']) do
     it { should exist }
-    it { should be_owned_by (node['cluster']['spack_user']).to_s }
-    it { should be_grouped_into (node['cluster']['spack_user']).to_s }
+    it { should be_owned_by (node['cluster']['spack']['user']).to_s }
+    it { should be_grouped_into (node['cluster']['spack']['user']).to_s }
   end
 
-  describe directory("#{node['cluster']['spack_root']}/share/spack") do
+  describe directory("#{node['cluster']['spack']['root']}/share/spack") do
     it { should exist }
-    it { should be_owned_by (node['cluster']['spack_user']).to_s }
-    it { should be_grouped_into (node['cluster']['spack_user']).to_s }
+    it { should be_owned_by (node['cluster']['spack']['user']).to_s }
+    it { should be_grouped_into (node['cluster']['spack']['user']).to_s }
   end
 
   describe file('/etc/profile.d/spack.sh') do
@@ -32,8 +34,15 @@ control 'tag:install_spack_correctly_installed' do
     it { should be_grouped_into 'root' }
   end
 
-  describe "spack commands can run as cluster default user #{node['cluster']['spack_user']}" do
-    subject { bash("su - #{node['cluster']['spack_user']} -c '#{node['cluster']['spack_root']}/bin/spack find'") }
+  describe "spack commands can run as cluster default user #{node['cluster']['spack']['user']}" do
+    subject { bash("su - #{node['cluster']['spack']['user']} -c '#{spack} find'") }
+    its('exit_status') { should eq(0) }
+  end
+
+  describe ""
+
+  describe "audit spack configs" do
+    subject { bash("#{spack} audit configs") }
     its('exit_status') { should eq(0) }
   end
 end
@@ -41,13 +50,13 @@ end
 control 'tag:install_spack_can_install_packages' do
   only_if { !os_properties.on_docker? }
 
-  describe "spack can install packages as cluster default user #{node['cluster']['spack_user']}" do
-    subject { bash("sudo su - #{node['cluster']['spack_user']} -c '#{node['cluster']['spack_root']}/bin/spack install xz'") }
+  describe "spack can install packages as cluster default user #{node['cluster']['spack']['user']}" do
+    subject { bash("sudo su - #{node['cluster']['spack']['user']} -c '#{spack} install xz'") }
     its('exit_status') { should eq(0) }
   end
 
   describe "spack can install packages as root" do
-    subject { bash("sudo su - -c '#{node['cluster']['spack_root']}/bin/spack install pkgconf'")}
+    subject { bash("sudo su - -c '#{spack} install pkgconf'") }
     its('exit_status') { should eq(0) }
   end
 end

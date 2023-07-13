@@ -20,3 +20,7 @@ def dependencies
   %w(build-essential ca-certificates coreutils curl environment-modules gfortran git gpg
      lsb-release python3 python3-distutils python3-venv unzip zip)
 end
+
+def libfabric_path
+  '/opt/amazon/efa/lib/pkgconfig/libfabric.pc'
+end

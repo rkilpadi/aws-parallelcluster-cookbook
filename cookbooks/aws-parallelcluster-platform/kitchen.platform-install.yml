@@ -180,6 +180,7 @@ suites:
       resource: spack
       dependencies:
         - recipe:aws-parallelcluster-platform::directories
+        - resource:efa
   - name: modules
     run_list:
       - recipe[aws-parallelcluster-tests::setup]
